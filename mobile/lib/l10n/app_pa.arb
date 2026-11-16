@@ -1,0 +1,18 @@
+{
+  "@@locale": "pa",
+  "appTitle": "تعلیم توں ترقی",
+  "tagline": "ہر گھر وچ اے آئی استاد، ہر نسل لئی علم",
+  "hello": "جی آیاں نوں! آؤ سکھنا شروع کریے۔",
+  "selectLanguage": "اپنی بولی چنو",
+  "urduLanguage": "اُردُو",
+  "sindhiLanguage": "سنڌي",
+  "englishLanguage": "English",
+  "punjabiLanguage": "پنجابی",
+  "pashtoLanguage": "پښتو",
+  "balochiLanguage": "بلوچی",
+  "startLearning": "سکھنا شروع کرو",
+  "listenPrompt": "آواز سنن لئی سپیکر تے ٹیپ کرو",
+  "offlineMode": "آف لائن سبق موڈ",
+  "liveAiMode": "لائیو اے آئی استاد",
+  "emergencyHelp": "ہنگامی مدد"
+}

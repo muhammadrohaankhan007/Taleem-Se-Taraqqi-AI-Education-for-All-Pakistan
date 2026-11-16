@@ -1,0 +1,18 @@
+{
+  "@@locale": "sd",
+  "appTitle": "تعليم مان ترقي",
+  "tagline": "هر گھر ۾ اي آءِ استاد، هر نسل لاءِ علم",
+  "hello": "ڀلي ڪري آيا! اچو سکڻ شروع ڪريون.",
+  "selectLanguage": "پنهنجي ٻولي چونڊيو",
+  "urduLanguage": "اُردُو",
+  "sindhiLanguage": "سنڌي",
+  "englishLanguage": "English",
+  "punjabiLanguage": "پنجابي",
+  "pashtoLanguage": "پښتو",
+  "balochiLanguage": "بلوچي",
+  "startLearning": "سکڻ شروع ڪريو",
+  "listenPrompt": "آواز ٻڌڻ لاءِ اسپيڪر تي ٽيپ ڪريو",
+  "offlineMode": "آف لائن سبق موڊ",
+  "liveAiMode": "لائيو اي آءِ مددگار",
+  "emergencyHelp": "ايمرجنسي مدد"
+}

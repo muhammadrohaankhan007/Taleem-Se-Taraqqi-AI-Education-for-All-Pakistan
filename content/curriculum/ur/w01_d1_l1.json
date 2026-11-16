@@ -1,0 +1,69 @@
+{
+  "id": "ur.w01.d1.l1",
+  "language": "ur",
+  "stage": 1,
+  "objective_key": "ur.obj.w01.d1.everyday_sounds",
+  "est_minutes": 10,
+  "age_bands": ["child_5_9", "adolescent_10_17", "adult_18_plus"],
+  "prerequisites": [],
+  "skills": ["listening_ur.env_sounds"],
+  "script": {
+    "intro_audio": "audio/ur/w01/d1/intro_TEMP_TTS.ogg",
+    "intro_text_key": "ur.w01.d1.intro",
+    "outro_audio": "audio/ur/w01/d1/outro_TEMP_TTS.ogg",
+    "outro_text_key": "ur.w01.d1.outro"
+  },
+  "activities": [
+    {
+      "type": "listen_and_tap",
+      "prompt_audio": "audio/ur/w01/d1/q1_tap_water_TEMP_TTS.ogg",
+      "prompt_text_key": "ur.w01.d1.q1_tap_water",
+      "hint_audio": "audio/ur/w01/d1/hint1_TEMP_TTS.ogg",
+      "options": [
+        {
+          "image": "assets/ui_images/lessons/running_water.webp",
+          "label_key": "word.water",
+          "audio": "audio/ur/words/water_TEMP_TTS.ogg",
+          "correct": true
+        },
+        {
+          "image": "assets/ui_images/lessons/goat.webp",
+          "label_key": "word.goat",
+          "audio": "audio/ur/words/goat_TEMP_TTS.ogg",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "type": "listen_and_tap",
+      "prompt_audio": "audio/ur/w01/d1/q2_tap_goat_TEMP_TTS.ogg",
+      "prompt_text_key": "ur.w01.d1.q2_tap_goat",
+      "hint_audio": "audio/ur/w01/d1/hint2_TEMP_TTS.ogg",
+      "options": [
+        {
+          "image": "assets/ui_images/lessons/running_water.webp",
+          "label_key": "word.water",
+          "audio": "audio/ur/words/water_TEMP_TTS.ogg",
+          "correct": false
+        },
+        {
+          "image": "assets/ui_images/lessons/goat.webp",
+          "label_key": "word.goat",
+          "audio": "audio/ur/words/goat_TEMP_TTS.ogg",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "type": "check",
+      "items": 2,
+      "pass_threshold": 0.5
+    }
+  ],
+  "review": {
+    "status": "draft",
+    "reviewer": "Awaiting Certified Literacy Specialist",
+    "date": "2026-11-16",
+    "notes": "Draft placeholder content awaiting formal pedagogue review."
+  }
+}

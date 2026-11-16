@@ -1,0 +1,18 @@
+{
+  "@@locale": "bal",
+  "appTitle": "تعلیم چہ دیمروی",
+  "tagline": "ہر لوگ ءَ یک اے آئی استاد، ہر پدریچ ءَ زانت",
+  "hello": "وش آتک ئے! بیا دربرگ ءَ بندات کن ایں.",
+  "selectLanguage": "وتی زبان ءَ گچین کن",
+  "urduLanguage": "اُردُو",
+  "sindhiLanguage": "سنڌي",
+  "englishLanguage": "English",
+  "punjabiLanguage": "پنجابی",
+  "pashtoLanguage": "پښتو",
+  "balochiLanguage": "بلوچی",
+  "startLearning": "دربرگ بندات کن",
+  "listenPrompt": "تواری گوشدارگ ءَ سپیکر ءَ بجن",
+  "offlineMode": "آف لائن سبق موڈ",
+  "liveAiMode": "لائیو اے آئی مددگار",
+  "emergencyHelp": "ہنگامی مدت"
+}

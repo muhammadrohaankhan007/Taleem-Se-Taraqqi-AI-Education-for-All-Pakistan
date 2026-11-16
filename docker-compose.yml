@@ -1,0 +1,72 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: tst_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-tst_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tst_secure_password_2026}
+      POSTGRES_DB: ${POSTGRES_DB:-taleem_db}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-tst_user} -d ${POSTGRES_DB:-taleem_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: tst_redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tst_backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-tst_user}:${POSTGRES_PASSWORD:-tst_secure_password_2026}@db:5432/${POSTGRES_DB:-taleem_db}
+      SYNC_DATABASE_URL: postgresql://${POSTGRES_USER:-tst_user}:${POSTGRES_PASSWORD:-tst_secure_password_2026}@db:5432/${POSTGRES_DB:-taleem_db}
+      REDIS_URL: redis://redis:6379/0
+      STORAGE_BACKEND: local
+      STORAGE_LOCAL_DIR: /app/storage
+      JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_key_change_in_production_32char}
+      ENVIRONMENT: dev
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - ./content:/app/content
+      - storage_data:/app/storage
+    restart: unless-stopped
+
+  admin-web:
+    build:
+      context: ./admin-web
+      dockerfile: Dockerfile
+    container_name: tst_admin_web
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:8000/api/v1
+    volumes:
+      - ./admin-web:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  storage_data:

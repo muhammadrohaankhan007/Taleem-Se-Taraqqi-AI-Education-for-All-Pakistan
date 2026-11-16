@@ -1,0 +1,18 @@
+{
+  "@@locale": "ur",
+  "appTitle": "تعلیم سے ترقی",
+  "tagline": "ہر گھر میں اے آئی استاد، ہر نسل کے لیے علم",
+  "hello": "خوش آمدید! آئیے سیکھنا شروع کریں۔",
+  "selectLanguage": "اپنی زبان منتخب کریں",
+  "urduLanguage": "اُردُو",
+  "sindhiLanguage": "سنڌي",
+  "englishLanguage": "English",
+  "punjabiLanguage": "پنجابی",
+  "pashtoLanguage": "پښتو",
+  "balochiLanguage": "بلوچی",
+  "startLearning": "سیکھنا شروع کریں",
+  "listenPrompt": "آواز سننے کے لیے سپیکر پر ٹیپ کریں",
+  "offlineMode": "آف لائن سبق موڈ",
+  "liveAiMode": "لائیو اے آئی استاد",
+  "emergencyHelp": "ہنگامی مدد"
+}

@@ -1,0 +1,145 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TaleemLessonSchema",
+  "description": "Schema for Taleem Se Taraqqi curriculum lessons",
+  "type": "object",
+  "required": [
+    "id",
+    "language",
+    "stage",
+    "objective_key",
+    "est_minutes",
+    "age_bands",
+    "prerequisites",
+    "skills",
+    "script",
+    "activities",
+    "review"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^(ur|sd|pa|ps|bal|en)\\.w[0-9]{2}\\.d[1-7]\\.l[0-9]+$"
+    },
+    "language": {
+      "type": "string",
+      "enum": ["ur", "sd", "pa", "ps", "bal", "en"]
+    },
+    "stage": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "objective_key": {
+      "type": "string"
+    },
+    "est_minutes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 60
+    },
+    "age_bands": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["child_5_9", "adolescent_10_17", "adult_18_plus"]
+      },
+      "minItems": 1
+    },
+    "prerequisites": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "script": {
+      "type": "object",
+      "required": ["intro_audio", "intro_text_key"],
+      "properties": {
+        "intro_audio": { "type": "string" },
+        "intro_text_key": { "type": "string" },
+        "outro_audio": { "type": "string" },
+        "outro_text_key": { "type": "string" }
+      }
+    },
+    "activities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "listen_and_tap",
+              "trace_letter",
+              "build_word",
+              "match_sound",
+              "count_and_tap",
+              "check"
+            ]
+          },
+          "prompt_audio": { "type": "string" },
+          "prompt_text_key": { "type": "string" },
+          "hint_audio": { "type": "string" },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "image": { "type": "string" },
+                "label_key": { "type": "string" },
+                "audio": { "type": "string" },
+                "correct": { "type": "boolean" }
+              },
+              "required": ["correct"]
+            }
+          },
+          "glyph": { "type": "string" },
+          "stroke_order": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": { "type": "number" },
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          },
+          "tolerance": { "type": "number", "minimum": 0.05, "maximum": 1.0 },
+          "tiles": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "target": { "type": "string" },
+          "audio": { "type": "string" },
+          "items": { "type": "integer", "minimum": 1 },
+          "pass_threshold": { "type": "number", "minimum": 0.1, "maximum": 1.0 }
+        }
+      }
+    },
+    "review": {
+      "type": "object",
+      "required": ["status", "reviewer", "date"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["draft", "in_review", "approved", "retired"]
+        },
+        "reviewer": { "type": "string" },
+        "date": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

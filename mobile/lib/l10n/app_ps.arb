@@ -1,0 +1,18 @@
+{
+  "@@locale": "ps",
+  "appTitle": "له زده کړې تر پرمختګه",
+  "tagline": "په هر کور کې د AI ښوونکی، د هر نسل لپاره پوهه",
+  "hello": "ښه راغلاست! راځئ چې زده کړه پیل کړو.",
+  "selectLanguage": "خپله ژبه وټاکئ",
+  "urduLanguage": "اُردُو",
+  "sindhiLanguage": "سنڌي",
+  "englishLanguage": "English",
+  "punjabiLanguage": "پنجابي",
+  "pashtoLanguage": "پښتو",
+  "balochiLanguage": "بلوچي",
+  "startLearning": "زده کړه پیل کړئ",
+  "listenPrompt": "د غږ اوریدو لپاره په سپیکر ټایپ کړئ",
+  "offlineMode": "آفلاین درس حالت",
+  "liveAiMode": "ژوندی د AI ښوونکی",
+  "emergencyHelp": "بیړنۍ مرسته"
+}

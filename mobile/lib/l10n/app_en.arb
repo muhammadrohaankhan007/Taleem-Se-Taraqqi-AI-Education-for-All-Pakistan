@@ -1,0 +1,21 @@
+{
+  "@@locale": "en",
+  "appTitle": "Taleem Se Taraqqi",
+  "@appTitle": {
+    "description": "Application title"
+  },
+  "tagline": "An AI Teacher in Every Home, Knowledge for Every Generation",
+  "hello": "Hello! Welcome to learning.",
+  "selectLanguage": "Select your language",
+  "urduLanguage": "Urdu",
+  "sindhiLanguage": "Sindhi",
+  "englishLanguage": "English",
+  "punjabiLanguage": "Punjabi",
+  "pashtoLanguage": "Pashto",
+  "balochiLanguage": "Balochi",
+  "startLearning": "Start Learning",
+  "listenPrompt": "Tap the speaker to listen",
+  "offlineMode": "Offline Mode",
+  "liveAiMode": "Live AI Helper",
+  "emergencyHelp": "Emergency Help"
+}

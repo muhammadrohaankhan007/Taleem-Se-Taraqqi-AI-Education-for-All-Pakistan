@@ -1,0 +1,7 @@
+file_name,language,speaker_role,tone,max_duration_sec,script_urdu,script_english_translation,notes
+audio/ur/w01/d1/intro_TEMP_TTS.ogg,ur,facilitator_female,warm_encouraging,6,خوش آمدید! آج ہم اپنے گھر اور ارد گرد کی آوازیں سنیں گے اور پہچانیں گے۔,Welcome! Today we will listen to and recognize sounds from our home and surroundings.,Clear articulation; gentle tone.
+audio/ur/w01/d1/q1_tap_water_TEMP_TTS.ogg,ur,facilitator_female,friendly,4,نلکے سے بہتے پانی کی آواز سنیں اور پانی کی تصویر کو چھوئیں۔,Listen to the sound of flowing water and tap the water picture.,Prompt for question 1.
+audio/ur/w01/d1/hint1_TEMP_TTS.ogg,ur,facilitator_female,patient,5,غور سے سنیں۔ چھم چھم کی آواز کہاں سے آ رہی ہے؟,Listen closely. Where is the splashing sound coming from?,Hint for question 1.
+audio/ur/w01/d1/q2_tap_goat_TEMP_TTS.ogg,ur,facilitator_female,friendly,4,بکری کی 'میں میں' آواز سن کر بکری کی تصویر کو چھوئیں۔,Listen to the goat's bleating and tap the picture of the goat.,Prompt for question 2.
+audio/ur/w01/d1/hint2_TEMP_TTS.ogg,ur,facilitator_female,patient,4,بکری کی آواز پہچانیں۔ بکری گھاس کھا رہی ہے۔,Recognize the goat sound. The goat is grazing.,Hint for question 2.
+audio/ur/w01/d1/outro_TEMP_TTS.ogg,ur,facilitator_female,cheerful,5,شاباش! آپ نے آج کا پہلا سبق کامیابی سے مکمل کر لیا ہے۔,Well done! You have successfully completed your first lesson today.,Celebratory outro sound.
