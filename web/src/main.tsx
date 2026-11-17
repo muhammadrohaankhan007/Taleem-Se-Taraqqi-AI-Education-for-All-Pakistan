@@ -1,5 +1,8 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import '@fontsource/inter'
+import '@fontsource/noto-nastaliq-urdu'
+import '@fontsource/noto-naskh-arabic'
 import './index.css'
 import App from './App.tsx'
 

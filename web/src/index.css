@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Make Tailwind's `font-sans` the self-hosted Inter, so the English class matches the body default. */
+@theme {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
 @layer base {
   body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { Language, CohortStudent } from '../types';
+import { useLanguage } from '../context/LanguageContext';
 import {
   Users,
   CheckCircle2,
@@ -11,7 +12,7 @@ import {
 } from 'lucide-react';
 
 interface Props {
-  language: Language;
+  language?: Language;
   onClose: () => void;
 }
 
@@ -85,13 +86,11 @@ const INITIAL_COHORT: CohortStudent[] = [
   },
 ];
 
-export const FacilitatorDashboardScreen: React.FC<Props> = ({ language, onClose }) => {
+export const FacilitatorDashboardScreen: React.FC<Props> = ({ onClose }) => {
+  const { isUrdu, isSindhi } = useLanguage();
   const [selectedVillage, setSelectedVillage] = useState(VILLAGES[0]);
   const [cohort, setCohort] = useState<CohortStudent[]>(INITIAL_COHORT);
   const [isSyncing, setIsSyncing] = useState(false);
-
-  const isUrdu = language === 'ur';
-  const isSindhi = language === 'sd';
 
   const handleSimulateSync = () => {
     setIsSyncing(true);
@@ -162,7 +161,7 @@ export const FacilitatorDashboardScreen: React.FC<Props> = ({ language, onClose 
       <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-sm font-bold text-slate-700">
           <MapPin className="w-5 h-5 text-teal-700 shrink-0" />
-          <span>{isSindhi ? 'ڳوٺ يا مرڪز چونڊيو:' : 'کمیونٹی سنٹر یا دیہہ منتخب کریں:'}</span>
+          <span>{isSindhi ? 'ڳوٺ يا مرڪز چونڊيو:' : isUrdu ? 'کمیونٹی سنٹر یا دیہہ منتخب کریں:' : 'Select Village / Center:'}</span>
         </div>
         <select
           value={selectedVillage}
@@ -181,25 +180,25 @@ export const FacilitatorDashboardScreen: React.FC<Props> = ({ language, onClose 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-bold">{isSindhi ? 'ڪل سکندڙ' : 'فعال طالب علم'}</span>
+            <span className="text-xs font-bold">{isSindhi ? 'ڪل سکندڙ' : isUrdu ? 'فعال طالب علم' : 'Active Learners'}</span>
             <Users className="w-4 h-4 text-teal-700" />
           </div>
           <span className="text-3xl font-black text-slate-900">48</span>
-          <span className="text-[11px] text-slate-500 mt-1">12 خاندانی ٹیبلٹس</span>
+          <span className="text-[11px] text-slate-500 mt-1">{isSindhi ? '12 خانداني ٽيبليٽس' : isUrdu ? '12 خاندانی ٹیبلٹس' : '12 Shared Tablets'}</span>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-bold">{isSindhi ? 'مڪمل اسباق' : 'مکمل اسباق'}</span>
+            <span className="text-xs font-bold">{isSindhi ? 'مڪمل اسباق' : isUrdu ? 'مکمل اسباق' : 'Lessons Completed'}</span>
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
           </div>
           <span className="text-3xl font-black text-emerald-700">194</span>
-          <span className="text-[11px] text-emerald-600 font-semibold mt-1">87% تسلسل کی شرح</span>
+          <span className="text-[11px] text-emerald-600 font-semibold mt-1">{isSindhi ? '87% تسلسل جي شرح' : isUrdu ? '87% تسلسل کی شرح' : '87% Retention Rate'}</span>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-bold">{isSindhi ? 'آف لائن سنک' : 'آف لائن ڈیوائسز'}</span>
+            <span className="text-xs font-bold">{isSindhi ? 'آف لائن سنڪ' : isUrdu ? 'آف لائن ڈیوائسز' : 'Offline Mesh Nodes'}</span>
             <WifiOff className="w-4 h-4 text-amber-600" />
           </div>
           <span className="text-3xl font-black text-amber-700">14</span>
@@ -208,11 +207,11 @@ export const FacilitatorDashboardScreen: React.FC<Props> = ({ language, onClose 
 
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-bold">{isSindhi ? 'حفاظتي الرٽس' : 'ہنگامی الرٹس'}</span>
+            <span className="text-xs font-bold">{isSindhi ? 'حفاظتي الرٽس' : isUrdu ? 'ہنگامی الرٹس' : 'Safety Red-Flags'}</span>
             <ShieldCheck className="w-4 h-4 text-rose-600" />
           </div>
           <span className="text-3xl font-black text-teal-800">0</span>
-          <span className="text-[11px] text-teal-700 font-semibold mt-1">کمیونٹی محفوظ ہے</span>
+          <span className="text-[11px] text-teal-700 font-semibold mt-1">{isSindhi ? 'ڪميونٽي محفوظ آهي' : isUrdu ? 'کمیونٹی محفوظ ہے' : 'Community Safe'}</span>
         </div>
       </div>
 
@@ -224,10 +223,10 @@ export const FacilitatorDashboardScreen: React.FC<Props> = ({ language, onClose 
               isUrdu ? 'font-urdu' : isSindhi ? 'font-sindhi' : ''
             }`}
           >
-            {isSindhi ? 'ڳوٺ جي سکندڙن جي فهرست (Cohort Roster):' : 'گروپ کے طلبہ و کسان (Cohort Roster):'}
+            {isSindhi ? 'ڳوٺ جي سکندڙن جي فهرست (Cohort Roster):' : isUrdu ? 'گروپ کے طلبہ و کسان (Cohort Roster):' : 'Cohort Learner Roster:'}
           </h3>
           <span className="text-xs text-slate-500 font-medium">
-            Showing {cohort.length} learners
+            {isSindhi ? `${cohort.length} سکندڙ ڏيکاريل` : isUrdu ? `${cohort.length} طلبہ و کسان شامل` : `Showing ${cohort.length} learners`}
           </span>
         </div>
 

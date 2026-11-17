@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Language, UserProfile } from '../types';
+import { useLanguage } from '../context/LanguageContext';
 import { DIAGNOSTIC_QUESTIONS } from '../data/quizQuestions';
 import { tts } from '../services/tts';
 import { updateStoredProfile } from '../services/storage';
@@ -7,46 +8,43 @@ import confetti from 'canvas-confetti';
 import { Volume2, Award, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 interface Props {
-  language: Language;
+  language?: Language;
   profile: UserProfile;
   onFinish: () => void;
 }
 
 export const PlacementQuizScreen: React.FC<Props> = ({
-  language,
   profile,
   onFinish,
 }) => {
+  const { lang, isUrdu, isSindhi } = useLanguage();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
 
-  const isUrdu = language === 'ur';
-  const isSindhi = language === 'sd';
-
   const q = DIAGNOSTIC_QUESTIONS[currentIndex];
 
   const playQuestionAudio = () => {
     let text = q.questionEn;
-    if (language === 'ur') text = q.questionUr;
-    if (language === 'sd') text = q.questionSd;
-    tts.speak(text, language);
+    if (lang === 'ur') text = q.questionUr;
+    if (lang === 'sd') text = q.questionSd;
+    tts.speak(text, lang);
   };
 
   useEffect(() => {
     if (!isCompleted) {
       let text = q.questionEn;
-      if (language === 'ur') text = q.questionUr;
-      if (language === 'sd') text = q.questionSd;
-      tts.speak(text, language);
+      if (lang === 'ur') text = q.questionUr;
+      if (lang === 'sd') text = q.questionSd;
+      tts.speak(text, lang);
     }
-  }, [currentIndex, isCompleted, language, q.questionEn, q.questionUr, q.questionSd]);
+  }, [currentIndex, isCompleted, lang, q.questionEn, q.questionUr, q.questionSd]);
 
   const handleSelectOption = (index: number) => {
     setSelectedOption(index);
-    const options = language === 'sd' ? q.optionsSd : language === 'ur' ? q.optionsUr : q.optionsEn;
-    tts.speak(options[index], language);
+    const options = lang === 'sd' ? q.optionsSd : lang === 'ur' ? q.optionsUr : q.optionsEn;
+    tts.speak(options[index], lang);
   };
 
   const handleNext = () => {
@@ -112,7 +110,7 @@ export const PlacementQuizScreen: React.FC<Props> = ({
       : isUrdu
       ? `شاباش! جائزہ مکمل ہو گیا۔ آپ کا اسکور ${finalScore} ہے اور سطح مقرر کر دی گئی ہے۔`
       : `Well done! Placement assessment complete. Your assigned score is ${finalScore}.`;
-    tts.speak(completionVoice, language);
+    tts.speak(completionVoice, lang);
   };
 
   if (isCompleted) {
@@ -139,30 +137,30 @@ export const PlacementQuizScreen: React.FC<Props> = ({
               isUrdu ? 'font-urdu' : isSindhi ? 'font-sindhi' : ''
             }`}
           >
-            {isSindhi ? 'مبارڪون! جائزو مڪمل ٿي ويو' : 'مبارک ہو! تشخیصی جائزہ مکمل'}
+            {isSindhi ? 'مبارڪون! جائزو مڪمل ٿي ويو' : isUrdu ? 'مبارک ہو! تشخیصی جائزہ مکمل' : 'Diagnostic Assessment Complete!'}
           </h2>
 
           <p className="text-slate-600 text-sm mb-6">
-            {profile.name} • {score} / {DIAGNOSTIC_QUESTIONS.length} {isSindhi ? 'صحيح جواب' : 'درست جواب'}
+            {profile.name} • {score} / {DIAGNOSTIC_QUESTIONS.length} {isSindhi ? 'صحيح جواب' : isUrdu ? 'درست جواب' : 'Correct'}
           </p>
 
           <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 mb-8 text-start space-y-3">
             <div>
               <span className="text-xs text-emerald-700 font-bold block uppercase tracking-wider">
-                {isSindhi ? 'مقرر ٿيل ليول (Assigned Level):' : 'مقرر کردہ تعلیمی سطح (Assigned Level):'}
+                {isSindhi ? 'مقرر ٿيل ليول (Assigned Level):' : isUrdu ? 'مقرر کردہ تعلیمی سطح (Assigned Level):' : 'Assigned Learning Level:'}
               </span>
               <p className="text-lg font-bold text-emerald-950">{finalLevel}</p>
             </div>
             <div className="pt-2 border-t border-emerald-200">
               <span className="text-xs text-emerald-700 font-bold block uppercase tracking-wider">
-                {isSindhi ? 'تجويز ڪيل تعليمي رستو (Suggested Pathway):' : 'تجویز کردہ تعلیمی ٹریک (Suggested Pathway):'}
+                {isSindhi ? 'تجويز ڪيل تعليمي رستو (Suggested Pathway):' : isUrdu ? 'تجویز کردہ تعلیمی ٹریک (Suggested Pathway):' : 'Recommended Pathway:'}
               </span>
               <p className="text-sm font-semibold text-emerald-900">
                 {score <= 3
-                  ? isSindhi ? 'بنيادي اکر، تصويرون ۽ صوتیات' : 'بنیادی حروف شناسی، تصویر شناسی اور صوتیات'
+                  ? isSindhi ? 'بنيادي اکر، تصويرون ۽ صوتیات' : isUrdu ? 'بنیادی حروف شناسی، تصویر شناسی اور صوتیات' : 'Foundational Phonics & Picture Literacy'
                   : score <= 6
-                  ? isSindhi ? 'بنيادي ڳڻپ، چانورن جي پوک ۽ خرچ' : 'بنیادی گنتی، دھان کی کاشت اور مارکیٹ حساب'
-                  : isSindhi ? 'مال مويشي، گھرو صحت ۽ بچت' : 'مال مویشی، گھریلو صحت اور ایزی پیسہ بچت'}
+                  ? isSindhi ? 'بنيادي ڳڻپ، چانورن جي پوک ۽ خرچ' : isUrdu ? 'بنیادی گنتی، دھان کی کاشت اور مارکیٹ حساب' : 'Foundational Numeracy & Sindh Agriculture'
+                  : isSindhi ? 'مال مويشي، گھرو صحت ۽ بچت' : isUrdu ? 'مال مویشی، گھریلو صحت اور ایزی پیسہ بچت' : 'Livestock Care, Health & Commerce'}
               </p>
             </div>
           </div>
@@ -171,7 +169,7 @@ export const PlacementQuizScreen: React.FC<Props> = ({
             onClick={onFinish}
             className="w-full min-h-[64px] bg-emerald-700 hover:bg-emerald-800 text-white rounded-2xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg transition-all active:scale-98"
           >
-            <span>{isSindhi ? 'تعليمي مرڪز ڏانهن وڃو' : 'تعلیمی مرکز میں داخل ہوں'}</span>
+            <span>{isSindhi ? 'تعليمي مرڪز ڏانهن وڃو' : isUrdu ? 'تعلیمی مرکز میں داخل ہوں' : 'Enter Learning Center'}</span>
             <ArrowRight className="w-5 h-5 rtl:-scale-x-100" />
           </button>
         </div>
@@ -180,16 +178,16 @@ export const PlacementQuizScreen: React.FC<Props> = ({
   }
 
   const options =
-    language === 'sd'
+    lang === 'sd'
       ? q.optionsSd
-      : language === 'ur'
+      : lang === 'ur'
       ? q.optionsUr
       : q.optionsEn;
 
   const questionText =
-    language === 'sd'
+    lang === 'sd'
       ? q.questionSd
-      : language === 'ur'
+      : lang === 'ur'
       ? q.questionUr
       : q.questionEn;
 
@@ -205,7 +203,7 @@ export const PlacementQuizScreen: React.FC<Props> = ({
           </div>
           <div className="flex items-center gap-2">
             <span className="bg-emerald-100 text-emerald-900 text-xs px-3 py-1 rounded-full font-bold">
-              {isSindhi ? `سوال ${currentIndex + 1} مان ${DIAGNOSTIC_QUESTIONS.length}` : `سوال ${currentIndex + 1} از ${DIAGNOSTIC_QUESTIONS.length}`}
+              {isSindhi ? `سوال ${currentIndex + 1} مان ${DIAGNOSTIC_QUESTIONS.length}` : isUrdu ? `سوال ${currentIndex + 1} از ${DIAGNOSTIC_QUESTIONS.length}` : `Question ${currentIndex + 1} of ${DIAGNOSTIC_QUESTIONS.length}`}
             </span>
             <span className="bg-amber-100 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded">
               [SIMULATED]
@@ -241,7 +239,7 @@ export const PlacementQuizScreen: React.FC<Props> = ({
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-emerald-100 text-emerald-900 text-xs font-bold hover:bg-emerald-200 transition-colors shadow-xs"
           >
             <Volume2 className="w-4 h-4 text-emerald-700" />
-            <span>{isSindhi ? 'سوال ٻيهر ٻڌو' : 'سوال دوبارہ سنیں'}</span>
+            <span>{isSindhi ? 'سوال ٻيهر ٻڌو' : isUrdu ? 'سوال دوبارہ سنیں' : 'Replay Question Audio'}</span>
           </button>
         </div>
 
@@ -287,8 +285,8 @@ export const PlacementQuizScreen: React.FC<Props> = ({
         >
           <span>
             {currentIndex === DIAGNOSTIC_QUESTIONS.length - 1
-              ? isSindhi ? 'جائزو مڪمل ڪريو' : 'جائزہ مکمل کریں'
-              : isSindhi ? 'اڳيون سوال' : 'اگلا سوال'}
+              ? isSindhi ? 'جائزو مڪمل ڪريو' : isUrdu ? 'جائزہ مکمل کریں' : 'Complete Assessment'
+              : isSindhi ? 'اڳيون سوال' : isUrdu ? 'اگلا سوال' : 'Next Question'}
           </span>
           <ArrowRight className="w-5 h-5 rtl:-scale-x-100" />
         </button>

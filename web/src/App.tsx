@@ -13,12 +13,28 @@ import { PlacementQuizScreen } from './screens/PlacementQuizScreen';
 import { LearnerHomeScreen } from './screens/LearnerHomeScreen';
 import { FacilitatorDashboardScreen } from './screens/FacilitatorDashboardScreen';
 import { LimitsModal } from './components/LimitsModal';
+import { SpeechNoticeBadge } from './components/SpeechNoticeBadge';
 
 const AppContent: React.FC = () => {
   const { lang, t } = useLanguage();
   const [activeProfile, setCurrentProfile] = useState<UserProfile>(() => getActiveProfile());
-  const [currentScreen, setCurrentScreen] = useState<'welcome' | 'family' | 'quiz' | 'home' | 'facilitator'>('welcome');
+  const [currentScreen, setCurrentScreenState] = useState<'welcome' | 'family' | 'quiz' | 'home' | 'facilitator'>(() => {
+    try {
+      const saved = localStorage.getItem('tst_current_screen');
+      if (saved === 'home' || saved === 'family' || saved === 'quiz' || saved === 'facilitator') {
+        return saved;
+      }
+    } catch {}
+    return 'welcome';
+  });
   const [isLimitsModalOpen, setIsLimitsModalOpen] = useState(false);
+
+  const setCurrentScreen = (screen: 'welcome' | 'family' | 'quiz' | 'home' | 'facilitator') => {
+    setCurrentScreenState(screen);
+    try {
+      localStorage.setItem('tst_current_screen', screen);
+    } catch {}
+  };
 
   const handleSelectProfile = (profile: UserProfile) => {
     setCurrentProfile(profile);
@@ -48,11 +64,14 @@ const AppContent: React.FC = () => {
         onGoHome={() => setCurrentScreen('home')}
       />
 
+      {/* Shown only when this device has no native voice for the active language */}
+      <SpeechNoticeBadge />
+
       {/* Main Dynamic Screen Body */}
       <main className="flex-1 pb-16">
         {currentScreen === 'welcome' && (
           <WelcomeLanguageScreen
-            onProceed={() => setCurrentScreen('family')}
+            onProceed={() => setCurrentScreen('home')}
           />
         )}
 
@@ -131,7 +150,6 @@ const AppContent: React.FC = () => {
       <LimitsModal
         isOpen={isLimitsModalOpen}
         onClose={() => setIsLimitsModalOpen(false)}
-        language={lang}
       />
     </div>
   );

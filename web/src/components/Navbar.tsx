@@ -1,11 +1,7 @@
 import React from 'react';
-import type { UserProfile } from '../types';
+import type { Language, UserProfile } from '../types';
 import { useLanguage } from '../context/LanguageContext';
-import {
-  HelpCircle,
-  Star,
-  LayoutDashboard,
-} from 'lucide-react';
+import { HelpCircle, Star, LayoutDashboard } from 'lucide-react';
 
 interface Props {
   activeProfile: UserProfile;
@@ -16,6 +12,9 @@ interface Props {
   onGoHome: () => void;
 }
 
+// Order requested for the pill switcher: English | Sindhi | Urdu.
+const LANGUAGE_PILLS: Language[] = ['en', 'sd', 'ur'];
+
 export const Navbar: React.FC<Props> = ({
   activeProfile,
   onSwitchProfile,
@@ -24,6 +23,7 @@ export const Navbar: React.FC<Props> = ({
   onOpenLimits,
   onGoHome,
 }) => {
+  // Language state is read straight from the global provider: no local copy to go stale.
   const { lang, setLang, isUrdu, isSindhi, t } = useLanguage();
 
   return (
@@ -43,9 +43,9 @@ export const Navbar: React.FC<Props> = ({
                 <h1 className="text-sm font-black text-teal-950 leading-tight">
                   {t('appName')}
                 </h1>
-                <span className="inline-flex items-center gap-1 bg-emerald-100/80 text-emerald-800 text-[10px] font-bold px-1.5 py-0.2 rounded-md">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
-                  <span>Offline</span>
+                <span className="inline-flex items-center gap-1.5 bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-md">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
+                  <span>{t('offlineReadyPlanned')}</span>
                 </span>
               </div>
               <p className="text-[10px] text-teal-700 font-semibold tracking-wide">
@@ -55,38 +55,33 @@ export const Navbar: React.FC<Props> = ({
           </button>
         </div>
 
-        {/* Center: Language Switcher Tabs */}
-        <div className="flex items-center bg-slate-100/90 p-1 rounded-2xl border border-slate-200 shadow-inner">
-          <button
-            onClick={() => setLang('ur')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
-              lang === 'ur'
-                ? 'bg-gradient-to-r from-teal-800 to-teal-700 text-white shadow-sm ring-1 ring-teal-900/10'
-                : 'text-slate-700 hover:text-teal-900 hover:bg-white/60'
-            }`}
-          >
-            اردو
-          </button>
-          <button
-            onClick={() => setLang('sd')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
-              lang === 'sd'
-                ? 'bg-gradient-to-r from-teal-800 to-teal-700 text-white shadow-sm ring-1 ring-teal-900/10'
-                : 'text-slate-700 hover:text-teal-900 hover:bg-white/60'
-            }`}
-          >
-            سنڌي
-          </button>
-          <button
-            onClick={() => setLang('en')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
-              lang === 'en'
-                ? 'bg-gradient-to-r from-teal-800 to-teal-700 text-white shadow-sm ring-1 ring-teal-900/10'
-                : 'text-slate-700 hover:text-teal-900 hover:bg-white/60'
-            }`}
-          >
-            English
-          </button>
+        {/* Center: Language Switcher (English | Sindhi | Urdu) */}
+        <div
+          role="group"
+          aria-label={t('changeLanguage')}
+          className="flex items-center bg-slate-100/90 p-1 rounded-2xl border border-slate-200 shadow-inner"
+        >
+          {LANGUAGE_PILLS.map((code) => {
+            const active = lang === code;
+            return (
+              <button
+                key={code}
+                type="button"
+                lang={code}
+                aria-pressed={active}
+                onClick={() => setLang(code)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
+                  code === 'ur' ? 'font-urdu' : code === 'sd' ? 'font-sindhi' : 'font-sans'
+                } ${
+                  active
+                    ? 'bg-gradient-to-r from-teal-800 to-teal-700 text-white shadow-sm ring-1 ring-teal-900/10'
+                    : 'text-slate-700 hover:text-teal-900 hover:bg-white/60'
+                }`}
+              >
+                {t('langNameNative', code)}
+              </button>
+            );
+          })}
         </div>
 
         {/* Right: Profile, Facilitator, Info */}
@@ -94,7 +89,8 @@ export const Navbar: React.FC<Props> = ({
           {/* Active Profile Pill */}
           <button
             onClick={onSwitchProfile}
-            title={isSindhi ? 'فيملي پروفائل تبديل ڪريو' : isUrdu ? 'فیملی پروفائل تبدیل کریں' : 'Switch Household Profile'}
+            title={t('switchProfile')}
+            aria-label={t('switchProfile')}
             className="flex items-center gap-2.5 px-3 py-1.5 rounded-2xl bg-white hover:bg-emerald-50/70 border border-slate-200 hover:border-emerald-300 text-slate-900 transition-all shadow-xs active:scale-98"
           >
             <span className="text-xl p-0.5 rounded-lg bg-slate-100">{activeProfile.avatar}</span>
@@ -106,8 +102,8 @@ export const Navbar: React.FC<Props> = ({
                 {isSindhi
                   ? activeProfile.roleSd
                   : isUrdu
-                  ? activeProfile.roleUr
-                  : activeProfile.role}
+                    ? activeProfile.roleUr
+                    : activeProfile.role}
               </span>
             </div>
             {/* Stars pill */}
@@ -125,7 +121,8 @@ export const Navbar: React.FC<Props> = ({
                 ? 'bg-teal-700 text-white border-teal-800 shadow-sm'
                 : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
             }`}
-            title="Facilitator / Community Dashboard"
+            title={t('facilitatorDashboardTip')}
+            aria-label={t('facilitatorDashboardTip')}
           >
             <LayoutDashboard className="w-4 h-4" />
           </button>
@@ -134,7 +131,8 @@ export const Navbar: React.FC<Props> = ({
           <button
             onClick={onOpenLimits}
             className="p-2.5 rounded-2xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 transition-all active:scale-95"
-            title="What's Real vs. What's Simulated"
+            title={t('realVsSimulatedTip')}
+            aria-label={t('realVsSimulatedTip')}
           >
             <HelpCircle className="w-4 h-4 text-emerald-700" />
           </button>

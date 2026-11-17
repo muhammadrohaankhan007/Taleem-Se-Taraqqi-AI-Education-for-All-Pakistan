@@ -1,54 +1,74 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Language } from '../types';
-import { getStoredLanguage, saveStoredLanguage } from '../services/storage';
-import { translations, type TranslationKey } from '../data/translations';
-import { LanguageContext } from './LanguageContext';
+import { getStoredLanguage, saveStoredLanguage, LANGUAGE_KEY } from '../services/storage';
+import { getTranslation, type TranslationKey } from '../data/translations';
+import { tts } from '../services/tts';
+import { LanguageContext, type LanguageContextType } from './LanguageContext';
+
+const FONT_CLASS: Record<Language, string> = {
+  en: 'font-sans',
+  ur: 'font-urdu',
+  sd: 'font-sindhi',
+};
+const ALL_FONT_CLASSES = Object.values(FONT_CLASS);
+const isLanguage = (v: unknown): v is Language => v === 'en' || v === 'ur' || v === 'sd';
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [lang, setLangState] = useState<Language>(() => getStoredLanguage());
 
-  const setLang = (newLang: Language) => {
-    setLangState(newLang);
-    saveStoredLanguage(newLang);
-  };
+  const setLang = useCallback((next: Language) => {
+    if (!isLanguage(next)) return;
+    // Persist first so a reload right after the click never reverts the choice.
+    tts.stop(); // cut off speech from the previous language; callers may speak right after
+    saveStoredLanguage(next);
+    setLangState(next);
+  }, []);
 
   const dir: 'ltr' | 'rtl' = lang === 'en' ? 'ltr' : 'rtl';
-  const fontFamily =
-    lang === 'ur' ? 'font-urdu' : lang === 'sd' ? 'font-sindhi' : 'font-sans';
+  const fontFamily = FONT_CLASS[lang];
 
-  const isUrdu = lang === 'ur';
-  const isSindhi = lang === 'sd';
-  const isEnglish = lang === 'en';
-
+  // Reflect the active language on the document so the whole page (including modals,
+  // toasts and anything outside the React tree wrapper) switches direction and typeface.
   useEffect(() => {
-    document.documentElement.dir = dir;
-    document.documentElement.lang = lang;
-  }, [dir, lang]);
+    const root = document.documentElement;
+    root.lang = lang;
+    root.dir = dir;
+    root.dataset.lang = lang;
+    document.body.classList.remove(...ALL_FONT_CLASSES);
+    document.body.classList.add(fontFamily);
+  }, [lang, dir, fontFamily]);
 
-  const t = (key: TranslationKey): string => {
-    const item = translations[key];
-    if (!item) return '';
-    if (typeof item === 'object' && ('en' in item || 'ur' in item || 'sd' in item)) {
-      const localized = item as Record<Language, string>;
-      return localized[lang] || localized.en || localized.ur || '';
-    }
-    return '';
-  };
+  // Keep several open tabs in sync.
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === LANGUAGE_KEY && isLanguage(e.newValue)) setLangState(e.newValue);
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
+  const t = useCallback(
+    (key: TranslationKey, forLang?: Language) => getTranslation(key, forLang ?? lang),
+    [lang],
+  );
+
+  const value = useMemo<LanguageContextType>(
+    () => ({
+      lang,
+      setLang,
+      dir,
+      fontFamily,
+      isUrdu: lang === 'ur',
+      isSindhi: lang === 'sd',
+      isEnglish: lang === 'en',
+      t,
+    }),
+    [lang, setLang, dir, fontFamily, t],
+  );
 
   return (
-    <LanguageContext.Provider
-      value={{
-        lang,
-        setLang,
-        dir,
-        fontFamily,
-        isUrdu,
-        isSindhi,
-        isEnglish,
-        t,
-      }}
-    >
-      <div className={`min-h-screen bg-slate-50 bg-subtle-pattern text-slate-900 ${fontFamily}`} dir={dir}>
+    <LanguageContext.Provider value={value}>
+      <div className="min-h-screen bg-slate-50 bg-subtle-pattern text-slate-900" dir={dir} lang={lang}>
         {children}
       </div>
     </LanguageContext.Provider>

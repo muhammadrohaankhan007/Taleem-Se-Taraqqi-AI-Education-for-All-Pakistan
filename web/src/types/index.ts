@@ -38,8 +38,10 @@ export interface SafetyRuleMatch {
   ruleId?: string;
   titleUr?: string;
   titleSd?: string;
+  titleEn?: string;
   instructionsUr?: string;
   instructionsSd?: string;
+  instructionsEn?: string;
   referralTarget?: string;
 }
 

@@ -1,23 +1,31 @@
 import React, { useState } from 'react';
-import type { UserProfile, Subject } from '../types';
+import type { UserProfile } from '../types';
+import type { SubjectId } from '../data/curriculumData';
+import {
+  ALL_CURRICULUM_SUBJECTS,
+  SUBJECTS_MAP,
+  getLessonById,
+} from '../data/curriculumData';
 import { useLanguage } from '../context/LanguageContext';
 import { tts } from '../services/tts';
-import { LiteracyModule } from '../components/learning/LiteracyModule';
-import { MathModule } from '../components/learning/MathModule';
-import { PhysicsModule } from '../components/learning/PhysicsModule';
-import { ChemistryModule } from '../components/learning/ChemistryModule';
-import { FarmingLivestockModule } from '../components/learning/FarmingLivestockModule';
-import { HealthSafetyModule } from '../components/learning/HealthSafetyModule';
+import {
+  getSubjectProgressPercent,
+  getSubjectCompletedCount,
+  getOverallProgressPercent,
+  getCompletedLessonIds,
+  getNextRecommendedLesson,
+  getLearningStreak,
+} from '../services/storage';
+import { SubjectCurriculumScreen } from './SubjectCurriculumScreen';
+import { LessonPlayerScreen } from './LessonPlayerScreen';
 import {
   Sparkles,
   ArrowRight,
   Star,
-  BookOpen,
-  Calculator,
-  Zap,
-  Droplets,
-  Wheat,
-  ShieldPlus,
+  Play,
+  CheckCircle2,
+  Flame,
+  Award,
   Volume2,
 } from 'lucide-react';
 
@@ -31,158 +39,73 @@ export const LearnerHomeScreen: React.FC<Props> = ({
   onTakePlacement,
 }) => {
   const { lang, isUrdu, isSindhi, t } = useLanguage();
-  const [activeModule, setActiveModule] = useState<Subject | null>(null);
 
-  const handleTileClick = (moduleName: Subject, title: string) => {
-    setActiveModule(moduleName);
-    tts.speak(title, lang);
+  // Navigation State inside Learner Home
+  const [activeSubjectId, setActiveSubjectId] = useState<SubjectId | null>(null);
+  const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
+
+  // If a lesson is being played, render the LessonPlayer
+  if (activeLessonId) {
+    return (
+      <LessonPlayerScreen
+        lessonId={activeLessonId}
+        onBackToSyllabus={() => {
+          const lesson = getLessonById(activeLessonId);
+          setActiveLessonId(null);
+          if (lesson) setActiveSubjectId(lesson.subjectId);
+        }}
+        onNavigateLesson={(nextId) => {
+          setActiveLessonId(nextId);
+        }}
+      />
+    );
+  }
+
+  // If a subject curriculum is opened, render the SubjectCurriculumScreen
+  if (activeSubjectId) {
+    return (
+      <SubjectCurriculumScreen
+        subjectId={activeSubjectId}
+        onSelectLesson={(lessonId) => {
+          setActiveLessonId(lessonId);
+        }}
+        onBackToDashboard={() => {
+          setActiveSubjectId(null);
+        }}
+      />
+    );
+  }
+
+  // Otherwise, render the Main Educational Dashboard
+  const overallProgress = getOverallProgressPercent(profile.id);
+  const completedLessons = getCompletedLessonIds(profile.id);
+  const streakDays = getLearningStreak();
+  const nextRec = getNextRecommendedLesson(profile.id);
+  const recLesson = getLessonById(nextRec.lessonId);
+  const recSubject = SUBJECTS_MAP[nextRec.subjectId];
+
+  const handleResume = () => {
+    if (recLesson) {
+      setActiveLessonId(recLesson.id);
+      tts.speak(recLesson.title[lang], lang);
+    }
   };
 
-  // Dedicated interactive modules
-  if (activeModule === 'literacy') {
-    return <LiteracyModule onClose={() => setActiveModule(null)} />;
-  }
-  if (activeModule === 'math') {
-    return <MathModule onClose={() => setActiveModule(null)} />;
-  }
-  if (activeModule === 'physics') {
-    return <PhysicsModule onClose={() => setActiveModule(null)} />;
-  }
-  if (activeModule === 'chemistry') {
-    return <ChemistryModule onClose={() => setActiveModule(null)} />;
-  }
-  if (activeModule === 'agriculture') {
-    return <FarmingLivestockModule onClose={() => setActiveModule(null)} />;
-  }
-  if (activeModule === 'health') {
-    return <HealthSafetyModule onClose={() => setActiveModule(null)} />;
-  }
-
-  // 6 Top-Level Modules Data for the 2x3 / 3x2 Grid
-  const modulesList = [
-    {
-      id: 'literacy' as Subject,
-      icon: <BookOpen className="w-8 h-8" />,
-      emoji: '📖',
-      titleUr: 'زبان و حروف شناسی',
-      titleSd: 'ٻولي ۽ اکر شناسي',
-      titleEn: 'Languages & Literacy',
-      subtitleUr: 'اردو، سندھی اور انگریزی حروف، صوتیات اور ٹچ اسکرین ٹریسنگ پیڈ',
-      subtitleSd: 'سنڌي، اردو ۽ انگريزي اکر، آواز ۽ ٽچ اسڪرين ٽريسنگ مشق',
-      subtitleEn: 'Trilingual phonics, interactive canvas tracing, vocabulary & signage',
-      tagUr: 'اردو • سنڌي • English',
-      tagSd: 'سنڌي • اردو • English',
-      tagEn: 'Urdu • Sindhi • English',
-      accentColor: 'border-sky-200 hover:border-sky-600 bg-gradient-to-b from-sky-50/60 to-white',
-      iconBg: 'bg-sky-100 text-sky-800 ring-2 ring-sky-300/40 group-hover:scale-105',
-      tagBg: 'bg-sky-100 text-sky-900 border border-sky-200/60',
-      progressColor: 'bg-sky-600',
-      progress: 65,
-    },
-    {
-      id: 'math' as Subject,
-      icon: <Calculator className="w-8 h-8" />,
-      emoji: '🔢',
-      titleUr: 'بنیادی و عملی ریاضی',
-      titleSd: 'بنيادي ۽ عملي حساب',
-      titleEn: 'Applied Mathematics',
-      subtitleUr: 'پاکستانی روپوں کا حساب، بازار کا بقایا، زرعی اراضی کنورٹر اور قرضہ مارک اپ',
-      subtitleSd: 'پاڪستاني نوٽن جي ڳڻپ، بازار جو بقايا، زرعي زمين ماپ ۽ قرض مارڪ اپ',
-      subtitleEn: 'PKR cash register, bazaar change, land area converter & agri-loan markup',
-      tagUr: 'حساب • کرنسی • اراضی',
-      tagSd: 'ڳڻپ • نوٽ • زمين',
-      tagEn: 'Cash • Land • Markup',
-      accentColor: 'border-emerald-200 hover:border-emerald-600 bg-gradient-to-b from-emerald-50/60 to-white',
-      iconBg: 'bg-emerald-100 text-emerald-800 ring-2 ring-emerald-300/40 group-hover:scale-105',
-      tagBg: 'bg-emerald-100 text-emerald-900 border border-emerald-200/60',
-      progressColor: 'bg-emerald-600',
-      progress: 50,
-    },
-    {
-      id: 'physics' as Subject,
-      icon: <Zap className="w-8 h-8" />,
-      emoji: '⚡',
-      titleUr: 'طبیعیات و دیہی توانائی',
-      titleSd: 'فزڪس ۽ ڳوٺاڻي توانائي',
-      titleEn: 'Physics & Rural Energy',
-      subtitleUr: 'کنویں کی چرخی و لیور، سولر پینل و بیٹری سائزنگ، اور ٹیوب ویل واٹر فلو',
-      subtitleSd: 'کوھ جي چرخي، سولر سسٽم ۽ بيٽري، ۽ ٽيوب ويل واٽر هائيڊرولڪس',
-      subtitleEn: 'Simple machines & pulleys, solar PV sizing & tube well hydraulics',
-      tagUr: 'چرخی • سولر • ٹیوب ویل',
-      tagSd: 'چرخي • سولر • واٽر پمپ',
-      tagEn: 'Pulleys • Solar • Hydraulics',
-      accentColor: 'border-amber-200 hover:border-amber-600 bg-gradient-to-b from-amber-50/60 to-white',
-      iconBg: 'bg-amber-100 text-amber-800 ring-2 ring-amber-300/40 group-hover:scale-105',
-      tagBg: 'bg-amber-100 text-amber-900 border border-amber-200/60',
-      progressColor: 'bg-amber-500',
-      progress: 40,
-    },
-    {
-      id: 'chemistry' as Subject,
-      icon: <Droplets className="w-8 h-8" />,
-      emoji: '🧪',
-      titleUr: 'کیمیا، پانی و زرعی مٹی',
-      titleSd: 'ڪيمسٽري، پاڻي ۽ زمين',
-      titleEn: 'Chemistry, Water & Soil',
-      subtitleUr: 'پینے کا صاف پانی (سودس/پھٹکری)، مٹی کی پی ایچ و جپسم علاج اور اسپرے محلول',
-      subtitleSd: 'صاف پيئڻ جو پاڻي، کلراٺي زمين ۽ جپسم، ۽ زرعي دوائن جا رنگ ڪوڊ',
-      subtitleEn: 'Safe water science, soil pH reclamation & agrochemical dilution safety',
-      tagUr: 'پانی • جپسم • کھاد',
-      tagSd: 'پاڻي • جپسم • ڀاڻ',
-      tagEn: 'Water • Soil pH • Sprays',
-      accentColor: 'border-indigo-200 hover:border-indigo-600 bg-gradient-to-b from-indigo-50/60 to-white',
-      iconBg: 'bg-indigo-100 text-indigo-800 ring-2 ring-indigo-300/40 group-hover:scale-105',
-      tagBg: 'bg-indigo-100 text-indigo-900 border border-indigo-200/60',
-      progressColor: 'bg-indigo-600',
-      progress: 35,
-    },
-    {
-      id: 'agriculture' as Subject,
-      icon: <Wheat className="w-8 h-8" />,
-      emoji: '🌾',
-      titleUr: 'کھیتی باڑی اور زرعی منافع',
-      titleSd: 'ٻني ٻارو ۽ منافعي جو حساب',
-      titleEn: 'Agriculture & Farm P&L',
-      subtitleUr: 'سندھ میں چاول و گندم کے 6 مراحل، خالص منافع بیلنس شیٹ اور مویشی ڈیری',
-      subtitleSd: 'سنڌ ۾ چانورن ۽ ڪڻڪ جا 6 مرحلا، سڌو منافعو اڪائونٽنگ ۽ مال جي ويڪسين',
-      subtitleEn: 'Sindh Rice/Wheat agronomy, itemized farm profit ledger & livestock care',
-      tagUr: 'دھان • گندم • بیلنس شیٹ',
-      tagSd: 'چانور • ڪڻڪ • منافعو',
-      tagEn: 'Rice • Wheat • Farm P&L',
-      accentColor: 'border-lime-200 hover:border-lime-600 bg-gradient-to-b from-lime-50/60 to-white',
-      iconBg: 'bg-lime-100 text-lime-800 ring-2 ring-lime-300/40 group-hover:scale-105',
-      tagBg: 'bg-lime-100 text-lime-900 border border-lime-200/60',
-      progressColor: 'bg-lime-600',
-      progress: 60,
-    },
-    {
-      id: 'health' as Subject,
-      icon: <ShieldPlus className="w-8 h-8" />,
-      emoji: '🏥',
-      titleUr: 'صحت، فرسٹ ایڈ و ریسکیو 1122',
-      titleSd: 'صحت، فرسٽ ايڊ ۽ ريسڪيو 1122',
-      titleEn: 'Health, First Aid & Safety',
-      subtitleUr: 'سانپ کاٹنا، لو لگنا، شدید خون، ریسکیو 1122 اور طبی نسخے کا سخت انکار',
-      subtitleSd: 'نانگ جو چڪ، شديد گرمي، رت روڪڻ، ريسڪيو 1122 ۽ دوائن جو انڪار',
-      subtitleEn: 'Snakebite triage, heatstroke, Rescue 1122 and medical prescription refusal',
-      tagUr: 'ریسکیو 1122 • فرسٹ ایڈ',
-      tagSd: 'ريسڪيو 1122 • فرسٽ ايڊ',
-      tagEn: 'Rescue 1122 • First Aid',
-      accentColor: 'border-rose-200 hover:border-rose-600 bg-gradient-to-b from-rose-50/60 to-white',
-      iconBg: 'bg-rose-100 text-rose-800 ring-2 ring-rose-300/40 group-hover:scale-105',
-      tagBg: 'bg-rose-100 text-rose-900 border border-rose-200/60',
-      progressColor: 'bg-rose-600',
-      progress: 45,
-    },
-  ];
+  const handleOpenSubject = (subId: SubjectId) => {
+    setActiveSubjectId(subId);
+    const sub = SUBJECTS_MAP[subId];
+    if (sub) {
+      tts.speak(sub.title[lang], lang);
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 md:p-8 space-y-8 animate-in fade-in duration-200">
-      {/* Learner Profile Banner */}
-      <div className="bg-gradient-to-r from-teal-950 via-teal-900 to-emerald-950 text-white rounded-3xl p-6 md:p-8 shadow-2xl border border-teal-800/50 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+      {/* 1. Welcome & Learner Hero Banner */}
+      <div className="bg-gradient-to-r from-teal-950 via-teal-900 to-emerald-950 text-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-teal-800/50 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
         {/* Soft decorative glow circles */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-400/10 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-72 h-72 bg-teal-400/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="flex items-center gap-5 text-center md:text-start relative z-10">
           <div className="w-20 h-20 rounded-3xl bg-white/10 backdrop-blur-md flex items-center justify-center text-5xl shadow-xl border border-white/20 shrink-0">
@@ -199,7 +122,14 @@ export const LearnerHomeScreen: React.FC<Props> = ({
                   {profile.stars} {t('stars')}
                 </span>
               </span>
+              <span className="text-xs bg-rose-500 text-white font-black px-3 py-1 rounded-full flex items-center gap-1.5 shadow-xs">
+                <Flame className="w-3.5 h-3.5 fill-white" />
+                <span>
+                  {streakDays} {t('learningStreak')}
+                </span>
+              </span>
             </div>
+
             <h2
               className={`text-2xl sm:text-3xl font-black tracking-tight ${
                 isUrdu ? 'font-urdu' : isSindhi ? 'font-sindhi' : ''
@@ -214,121 +144,192 @@ export const LearnerHomeScreen: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* Retake placement assessment action */}
+        {/* Retake assessment action */}
         <button
           onClick={onTakePlacement}
           className="relative z-10 px-5 py-3 rounded-2xl bg-white/15 hover:bg-white/25 active:scale-95 text-white text-xs font-black border border-white/20 transition-all flex items-center gap-2.5 shrink-0 shadow-sm"
         >
           <Sparkles className="w-4 h-4 text-amber-300" />
-          <span>
-            {isSindhi
-              ? 'مهارت جو جائزو ٻيهر ڏيو'
-              : isUrdu
-              ? 'مہارت کا تشخیصی جائزہ دوبارہ دیں'
-              : 'Retake Diagnostic Quiz'}
-          </span>
+          <span>{t('retakeQuiz')}</span>
         </button>
       </div>
 
-      {/* Section Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-2 border-b border-slate-200/80 pb-3">
-        <div>
-          <h3
-            className={`text-xl sm:text-2xl font-black text-slate-900 ${
-              isUrdu ? 'font-urdu' : isSindhi ? 'font-sindhi' : ''
-            }`}
-          >
-            {isSindhi
-              ? 'پنهنجو سکيا وارو شعبو چونڊيو (Choose Pathway)'
-              : isUrdu
-              ? 'اپنا تعلیمی شعبہ منتخب کریں (Choose Pathway)'
-              : 'Select Your Learning Pathway'}
-          </h3>
-          <p className="text-xs text-slate-500 font-medium mt-0.5">
-            {isSindhi
-              ? '6 مڪمل طور تي فعال موضوع: وڏا ٽيبلٽ ٽارگيٽ، آواز، مشقون ۽ خالص عملي ڳڻپيوڪر'
-              : isUrdu
-              ? '6 مکمل طور پر فعال موضوعات: بڑے ٹیبلٹ ٹچ ٹارگٹس، صوتی رہنمائی، حقیقی مشقیں اور سائنسی لیبز'
-              : '6 fully functional modules with tablet-first touch targets (≥72px), audio guidance and interactive labs.'}
-          </p>
+      {/* 2. Overall Progress Overview & Continue Learning Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Overall Progress Metric Card */}
+        <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm space-y-4 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                {t('overallProgress')}
+              </span>
+              <span className="text-xs font-black text-teal-800 bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-200">
+                {completedLessons.length} {t('completed')}
+              </span>
+            </div>
+            <div className="text-3xl font-black text-slate-900 mb-2">
+              {overallProgress}%
+            </div>
+            <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+              <div
+                className="h-full bg-gradient-to-r from-teal-600 to-emerald-500 rounded-full transition-all duration-300"
+                style={{ width: `${overallProgress}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
+            <span className="flex items-center gap-1.5 font-bold">
+              <Award className="w-4 h-4 text-amber-500" />
+              <span>
+                {profile.stars} {t('stars')}
+              </span>
+            </span>
+            <span className="flex items-center gap-1.5 font-bold text-rose-600">
+              <Flame className="w-4 h-4" />
+              <span>
+                {streakDays} {t('learningStreak')}
+              </span>
+            </span>
+          </div>
         </div>
+
+        {/* Continue Learning / Recommended Lesson Card */}
+        {recLesson && (
+          <div className="lg:col-span-2 bg-gradient-to-r from-teal-900 to-emerald-900 text-white rounded-3xl p-6 shadow-md border border-teal-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative overflow-hidden">
+            <div className="space-y-2 relative z-10 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-black uppercase tracking-wider bg-white/20 text-white px-2.5 py-0.5 rounded-md">
+                  {t('recommendedForYou')}
+                </span>
+                <span className="text-xs text-emerald-300 font-bold">
+                  {recSubject?.title[lang]}
+                </span>
+              </div>
+
+              <h3
+                className={`text-lg sm:text-xl font-black text-white ${
+                  isUrdu ? 'font-urdu' : isSindhi ? 'font-sindhi' : ''
+                }`}
+              >
+                {recLesson.title[lang]}
+              </h3>
+
+              <p className="text-xs text-teal-100/90 line-clamp-2 leading-relaxed">
+                {recLesson.content.introduction[lang]}
+              </p>
+            </div>
+
+            <button
+              onClick={handleResume}
+              className="relative z-10 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 active:scale-95 text-amber-950 font-black text-xs sm:text-sm flex items-center gap-2 shadow-lg shrink-0 transition-all"
+            >
+              <Play className="w-4 h-4 fill-amber-950" />
+              <span>{t('resumeLearning')}</span>
+              <ArrowRight className="w-4 h-4 rtl:-scale-x-100" />
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* 6 Distinct, Spacious Learning Cards (2x3 or 3x2 Responsive Grid) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {modulesList.map((m) => {
-          const title = isSindhi ? m.titleSd : isUrdu ? m.titleUr : m.titleEn;
-          const subtitle = isSindhi ? m.subtitleSd : isUrdu ? m.subtitleUr : m.subtitleEn;
-          const tag = isSindhi ? m.tagSd : isUrdu ? m.tagUr : m.tagEn;
-
-          return (
-            <button
-              key={m.id}
-              onClick={() => handleTileClick(m.id, title)}
-              className={`group relative ${m.accentColor} p-6 sm:p-7 rounded-3xl border-2 text-start shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-200 active:scale-[0.985] flex flex-col justify-between min-h-[290px]`}
+      {/* 3. Academic Subjects Grid (6 Distinct Curriculum Subjects) */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-200/80 pb-3">
+          <div>
+            <h3
+              className={`text-xl sm:text-2xl font-black text-slate-900 ${
+                isUrdu ? 'font-urdu' : isSindhi ? 'font-sindhi' : ''
+              }`}
             >
-              {/* Card Header: Icon + Badge + Audio Button */}
-              <div>
-                <div className="flex items-start justify-between gap-3 mb-4">
-                  <div
-                    className={`w-16 h-16 rounded-2xl ${m.iconBg} flex items-center justify-center shadow-inner shrink-0 transition-all duration-200`}
+              {t('subjects')}
+            </h3>
+            <p className="text-xs text-slate-500 font-medium mt-0.5">
+              {t('pathwaySubtitle')}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {ALL_CURRICULUM_SUBJECTS.map((sub) => {
+            const subProgress = getSubjectProgressPercent(sub.id, profile.id);
+            const subCompleted = getSubjectCompletedCount(sub.id, profile.id);
+
+            return (
+              <div
+                key={sub.id}
+                onClick={() => handleOpenSubject(sub.id)}
+                className={`group relative bg-white p-6 rounded-3xl border-2 ${sub.accentBorder} shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-200 active:scale-[0.985] flex flex-col justify-between cursor-pointer min-h-[300px]`}
+              >
+                <div>
+                  {/* Top: Icon + Badge + Audio Pronunciation */}
+                  <div className="flex items-start justify-between gap-3 mb-4">
+                    <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-3xl shadow-inner border border-slate-200/70 group-hover:scale-105 transition-transform">
+                      {sub.emoji}
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <span className={`text-[10px] font-black px-2.5 py-1 rounded-full border ${sub.badgeBg}`}>
+                        {sub.tag[lang]}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          tts.speak(sub.title[lang], lang);
+                        }}
+                        className="p-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 shadow-2xs border border-slate-200"
+                        title={t('listenAudio')}
+                      >
+                        <Volume2 className="w-3.5 h-3.5 text-teal-800" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Title & Description */}
+                  <h4
+                    className={`text-lg font-black text-slate-900 group-hover:text-teal-900 transition-colors mb-1.5 ${
+                      isUrdu ? 'font-urdu' : isSindhi ? 'font-sindhi' : ''
+                    }`}
                   >
-                    {m.icon}
-                  </div>
+                    {sub.title[lang]}
+                  </h4>
 
-                  <div className="flex items-center gap-1.5">
-                    <span className={`text-[10px] sm:text-[11px] font-black px-2.5 py-1 rounded-full ${m.tagBg}`}>
-                      {tag}
+                  <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
+                    {sub.description[lang]}
+                  </p>
+                </div>
+
+                {/* Bottom: Progress Bar & Syllabus Link */}
+                <div className="mt-5 pt-3.5 border-t border-slate-100 space-y-2">
+                  <div className="flex items-center justify-between text-xs text-slate-500 font-bold">
+                    <span>
+                      {subCompleted} / {sub.lessons.length} {t('lessonsCompleted')}
                     </span>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        tts.speak(`${title}. ${subtitle}`, lang);
-                      }}
-                      className="p-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 shadow-2xs border border-slate-200 active:scale-95 transition-all"
-                      title={t('listenAudio')}
-                    >
-                      <Volume2 className="w-4 h-4 text-teal-800" />
-                    </button>
+                    <span className="font-black text-teal-900">{subProgress}%</span>
+                  </div>
+
+                  <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                    <div
+                      className="h-full bg-teal-600 rounded-full transition-all duration-300"
+                      style={{ width: `${subProgress}%` }}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-xs font-black text-teal-800 flex items-center gap-1 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform">
+                      <span>{t('viewCurriculum')}</span>
+                      <ArrowRight className="w-3.5 h-3.5 rtl:-scale-x-100" />
+                    </span>
+                    {subProgress === 100 && (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    )}
                   </div>
                 </div>
-
-                {/* Card Title & Subtitle */}
-                <h4
-                  className={`text-lg sm:text-xl font-black text-slate-900 group-hover:text-teal-900 transition-colors mb-2 ${
-                    isUrdu ? 'font-urdu' : isSindhi ? 'font-sindhi' : ''
-                  }`}
-                >
-                  {title}
-                </h4>
-                <p className="text-xs text-slate-600 font-medium leading-relaxed line-clamp-3">
-                  {subtitle}
-                </p>
               </div>
-
-              {/* Card Bottom: Progress Bar & Action Link */}
-              <div className="mt-5 pt-3.5 border-t border-slate-200/80 space-y-2">
-                <div className="flex items-center justify-between text-xs text-slate-500 font-bold">
-                  <span>{isSindhi ? 'ترقي:' : isUrdu ? 'پیشرفت:' : 'Progress:'} {m.progress}%</span>
-                  <span className="text-teal-800 font-black flex items-center gap-1 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform">
-                    <span>{t('startLearning')}</span>
-                    <ArrowRight className="w-3.5 h-3.5 rtl:-scale-x-100" />
-                  </span>
-                </div>
-                <div className="w-full bg-slate-200/80 h-2 rounded-full overflow-hidden shadow-inner">
-                  <div
-                    className={`${m.progressColor} h-full rounded-full transition-all duration-500`}
-                    style={{ width: `${m.progress}%` }}
-                  />
-                </div>
-              </div>
-            </button>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );
 };
-
-export default LearnerHomeScreen;

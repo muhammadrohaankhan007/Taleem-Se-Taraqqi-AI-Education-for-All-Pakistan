@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { Language, UserProfile } from '../types';
+import { useLanguage } from '../context/LanguageContext';
 import {
   AVAILABLE_AVATARS,
   PIN_SYMBOLS,
@@ -11,16 +12,16 @@ import { tts } from '../services/tts';
 import { Users, UserPlus, Star, X } from 'lucide-react';
 
 interface Props {
-  language: Language;
+  language?: Language;
   onSelectProfile: (profile: UserProfile) => void;
   onTakeAssessment: (profile: UserProfile) => void;
 }
 
 export const FamilySwitcherScreen: React.FC<Props> = ({
-  language,
   onSelectProfile,
   onTakeAssessment,
 }) => {
+  const { lang, isUrdu, isSindhi } = useLanguage();
   const [profiles, setProfiles] = useState<UserProfile[]>(() => getStoredProfiles());
   const [selectedProfileForPin, setSelectedProfileForPin] = useState<UserProfile | null>(null);
   const [enteredPin, setEnteredPin] = useState<string[]>([]);
@@ -33,11 +34,8 @@ export const FamilySwitcherScreen: React.FC<Props> = ({
   const [newRole] = useState('Child');
   const [newPin] = useState<string[]>(['🌟', '🌙', '🦁', '🍎']);
 
-  const isUrdu = language === 'ur';
-  const isSindhi = language === 'sd';
-
   const handleCardClick = (profile: UserProfile) => {
-    tts.speak(profile.name, language);
+    tts.speak(profile.name, lang);
     setSelectedProfileForPin(profile);
     setEnteredPin([]);
     setIsPinError(false);
@@ -105,7 +103,7 @@ export const FamilySwitcherScreen: React.FC<Props> = ({
       setProfiles(getStoredProfiles());
       setIsAddModalOpen(false);
       setNewName('');
-      tts.speak(created.name, language);
+      tts.speak(created.name, lang);
     }
   };
 
@@ -197,7 +195,7 @@ export const FamilySwitcherScreen: React.FC<Props> = ({
               {isSindhi ? '+ نئون فيملي ميمبر شامل ڪريو' : isUrdu ? '+ نیا فیملی ممبر شامل کریں' : '+ Add Family Member'}
             </span>
             <span className="text-xs text-slate-400">
-              {profiles.length} / 6 Profiles used
+              {isSindhi ? `${profiles.length} / 6 پروفائلز استعمال ٿيل` : isUrdu ? `${profiles.length} / 6 پروفائلز استعمال شدہ` : `${profiles.length} / 6 Profiles used`}
             </span>
           </button>
         )}
@@ -224,7 +222,9 @@ export const FamilySwitcherScreen: React.FC<Props> = ({
             <p className="text-xs text-slate-500 mb-6">
               {isSindhi
                 ? 'لاگ ان ٿيڻ لاءِ پنهنجو 4-علامتي تصويري پن داخل ڪريو'
-                : 'لاگ ان کے لیے اپنا 4-علامتی تصویری پن درج کریں'}
+                : isUrdu
+                ? 'لاگ ان کے لیے اپنا 4-علامتی تصویری پن درج کریں'
+                : 'Enter your 4-symbol picture PIN to sign in'}
             </p>
 
             {/* PIN Slots (4 visual picture boxes) */}
@@ -278,7 +278,7 @@ export const FamilySwitcherScreen: React.FC<Props> = ({
               }}
               className="text-xs text-emerald-800 hover:underline font-bold mt-2"
             >
-              {isSindhi ? 'بغير پن داخل ٿيو (Bypass PIN for Demo)' : 'بغیر پن لاگ ان کریں (Bypass for Demo)'}
+              {isSindhi ? 'بغير پن داخل ٿيو (Bypass PIN for Demo)' : isUrdu ? 'بغیر پن لاگ ان کریں (Bypass for Demo)' : 'Bypass PIN (Demo)'}
             </button>
           </div>
         </div>
@@ -290,7 +290,7 @@ export const FamilySwitcherScreen: React.FC<Props> = ({
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 text-start animate-in zoom-in-95 duration-150">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold text-slate-900">
-                {isSindhi ? 'نئون فيملي ميمبر شامل ڪريو' : 'نیا فیملی ممبر شامل کریں'}
+                {isSindhi ? 'نئون فيملي ميمبر شامل ڪريو' : isUrdu ? 'نیا فیملی ممبر شامل کریں' : 'Add New Family Member'}
               </h3>
               <button
                 onClick={() => setIsAddModalOpen(false)}
@@ -303,20 +303,20 @@ export const FamilySwitcherScreen: React.FC<Props> = ({
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  {isSindhi ? 'نالو (Name)' : 'نام (Name)'}
+                  {isSindhi ? 'نالو (Name)' : isUrdu ? 'نام (Name)' : 'Learner Name'}
                 </label>
                 <input
                   type="text"
                   value={newName}
                   onChange={e => setNewName(e.target.value)}
-                  placeholder="مثلاً: فاطمہ، علی، دادی جان"
+                  placeholder={isSindhi ? 'مثال: فاطمه، علي، دادي' : isUrdu ? 'مثلاً: فاطمہ، علی، دادی جان' : 'e.g. Fatima, Ali, Grandmother'}
                   className="w-full bg-slate-50 rounded-xl px-4 py-3 border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-2">
-                  {isSindhi ? 'تصوير چونڊيو (Avatar)' : 'تصویر یا اوتار منتخب کریں'}
+                  {isSindhi ? 'تصوير چونڊيو (Avatar)' : isUrdu ? 'تصویر یا اوتار منتخب کریں' : 'Choose Avatar'}
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {AVAILABLE_AVATARS.map(av => (
@@ -338,7 +338,7 @@ export const FamilySwitcherScreen: React.FC<Props> = ({
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  {isSindhi ? '4-علامتي تصويري پن' : '4-علامتی تصویری پن (Picture PIN)'}
+                  {isSindhi ? '4-علامتي تصويري پن' : isUrdu ? '4-علامتی تصویری پن (Picture PIN)' : '4-Symbol Picture PIN'}
                 </label>
                 <div className="flex gap-2 p-3 bg-emerald-50 rounded-xl text-2xl justify-center">
                   {newPin.map((p, i) => (
@@ -354,7 +354,7 @@ export const FamilySwitcherScreen: React.FC<Props> = ({
                 onClick={() => setIsAddModalOpen(false)}
                 className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold text-sm"
               >
-                {isSindhi ? 'رد ڪريو' : 'منسوخ کریں'}
+                {isSindhi ? 'رد ڪريو' : isUrdu ? 'منسوخ کریں' : 'Cancel'}
               </button>
               <button
                 type="button"
@@ -362,7 +362,7 @@ export const FamilySwitcherScreen: React.FC<Props> = ({
                 disabled={!newName.trim()}
                 className="px-6 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white font-bold text-sm shadow-md"
               >
-                {isSindhi ? 'محفوظ ڪريو' : 'محفوظ کریں'}
+                {isSindhi ? 'محفوظ ڪريو' : isUrdu ? 'محفوظ کریں' : 'Save Profile'}
               </button>
             </div>
           </div>

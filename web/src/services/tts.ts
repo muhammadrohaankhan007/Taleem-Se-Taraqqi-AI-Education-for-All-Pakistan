@@ -1,91 +1,139 @@
 import type { Language } from '../types';
 
+/**
+ * How well the current device can speak a language:
+ *  - native:  a voice whose language matches (e.g. ur-PK) exists
+ *  - fallback: no native voice, but a related-script voice (Urdu/Arabic) exists and is used
+ *  - none:    nothing usable; speech is skipped and the UI shows a text-mode notice
+ */
+export type VoiceStatus = 'native' | 'fallback' | 'none';
+
+type Listener = () => void;
+
+/** Ordered list of BCP-47 language prefixes we are willing to use per UI language. */
+const VOICE_PREFERENCE: Record<Language, { native: string[]; fallback: string[] }> = {
+  en: { native: ['en'], fallback: [] },
+  ur: { native: ['ur'], fallback: ['ar'] },
+  // Sindhi has almost no browser voices; Urdu then Arabic share its script.
+  sd: { native: ['sd'], fallback: ['ur', 'ar'] },
+};
+
+const UTTERANCE_LANG: Record<Language, string> = { en: 'en-US', ur: 'ur-PK', sd: 'sd-PK' };
+
 class TtsService {
   private synth: SpeechSynthesis | null = null;
   private voices: SpeechSynthesisVoice[] = [];
-  private isLoaded = false;
+  private listeners = new Set<Listener>();
 
   constructor() {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      this.synth = window.speechSynthesis;
-      this.loadVoices();
-      if (this.synth.onvoiceschanged !== undefined) {
-        this.synth.onvoiceschanged = () => this.loadVoices();
+    try {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        this.synth = window.speechSynthesis;
+        this.loadVoices();
+        // Chrome loads voices asynchronously; refresh and tell listeners.
+        this.synth.addEventListener?.('voiceschanged', () => {
+          this.loadVoices();
+          this.listeners.forEach((fn) => fn()); // voice list changed: subscribers re-check
+        });
       }
+    } catch {
+      this.synth = null;
     }
   }
 
   private loadVoices() {
-    if (!this.synth) return;
-    this.voices = this.synth.getVoices();
-    this.isLoaded = true;
+    try {
+      this.voices = this.synth?.getVoices() ?? [];
+    } catch {
+      this.voices = [];
+    }
   }
 
   public getVoices(): SpeechSynthesisVoice[] {
     if (!this.synth) return [];
-    if (!this.isLoaded || this.voices.length === 0) {
-      this.voices = this.synth.getVoices();
-    }
+    if (this.voices.length === 0) this.loadVoices();
     return this.voices;
   }
 
-  public hasVoiceFor(lang: Language): boolean {
+  private findVoice(prefixes: string[]): SpeechSynthesisVoice | undefined {
     const list = this.getVoices();
-    if (list.length === 0) return false;
-
-    if (lang === 'ur') {
-      return list.some(v => v.lang.startsWith('ur'));
+    for (const prefix of prefixes) {
+      const match = list.find((v) => v.lang.toLowerCase().replace('_', '-').startsWith(prefix));
+      if (match) return match;
     }
-    if (lang === 'sd') {
-      return list.some(v => v.lang.startsWith('sd'));
-    }
-    return list.some(v => v.lang.startsWith('en'));
+    return undefined;
   }
 
-  public speak(text: string, lang: Language, onEnd?: () => void) {
-    if (!this.synth) {
-      if (onEnd) onEnd();
-      return;
+  /** Describe how speech will behave for a language on this device (no side effects). */
+  public getVoiceStatus(lang: Language): VoiceStatus {
+    if (!this.synth) return 'none';
+    const pref = VOICE_PREFERENCE[lang];
+    if (this.findVoice(pref.native)) return 'native';
+    if (this.findVoice(pref.fallback)) return 'fallback';
+    // English can always use the browser default voice if any voice exists at all.
+    if (lang === 'en' && this.getVoices().length > 0) return 'native';
+    return 'none';
+  }
+
+  public hasVoiceFor(lang: Language): boolean {
+    return this.getVoiceStatus(lang) === 'native';
+  }
+
+  /** Subscribe to voice-list changes. Returns an unsubscribe function. */
+  public subscribe(fn: Listener): () => void {
+    this.listeners.add(fn);
+    return () => {
+      this.listeners.delete(fn);
+    };
+  }
+
+  /**
+   * Speak text. Never throws and never blocks the click that called it.
+   * Returns the voice status that was used so callers can show a notice if they wish.
+   */
+  public speak(text: string, lang: Language, onEnd?: () => void): VoiceStatus {
+    const status = this.getVoiceStatus(lang);
+
+    if (!this.synth || status === 'none' || !text) {
+      onEnd?.();
+      return status === 'none' || !this.synth ? 'none' : status;
     }
 
     try {
-      this.synth.cancel(); // Stop any currently playing audio
+      this.synth.cancel();
 
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.9; // Slightly slower for low-literacy learners
+      utterance.rate = 0.9; // slightly slower for low-literacy learners
       utterance.pitch = 1.0;
+      utterance.lang = UTTERANCE_LANG[lang];
 
-      const voices = this.getVoices();
-      let targetLang = 'en-US';
-      if (lang === 'ur') targetLang = 'ur-PK';
-      if (lang === 'sd') targetLang = 'sd-PK';
-
-      utterance.lang = targetLang;
-
-      // Try matching voice
-      const matched = voices.find(v => v.lang.toLowerCase().startsWith(lang));
-      if (matched) {
-        utterance.voice = matched;
-      } else if (lang === 'ur') {
-        // Fallback to Hindi or Arabic voice if Urdu voice is missing
-        const fallback = voices.find(v => v.lang.startsWith('hi') || v.lang.startsWith('ar'));
-        if (fallback) utterance.voice = fallback;
+      const pref = VOICE_PREFERENCE[lang];
+      const voice = this.findVoice(pref.native) ?? this.findVoice(pref.fallback);
+      if (voice) {
+        utterance.voice = voice;
+        if (status === 'fallback') utterance.lang = voice.lang; // match the substitute voice
       }
 
       if (onEnd) {
         utterance.onend = () => onEnd();
         utterance.onerror = () => onEnd();
+      } else {
+        utterance.onerror = () => undefined; // swallow 'interrupted'/'canceled' errors quietly
       }
 
       this.synth.speak(utterance);
+      return status;
     } catch {
-      if (onEnd) onEnd();
+      onEnd?.();
+      return 'none';
     }
   }
 
   public stop() {
-    if (this.synth) {
-      this.synth.cancel();
+    try {
+      this.synth?.cancel();
+    } catch {
+      // ignore
     }
   }
 }
